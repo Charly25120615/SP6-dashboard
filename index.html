@@ -3,726 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SP6 Dashboard de Gestión Corporativa 2025</title>
-    <!-- Incluimos Tailwind CSS para estilos limpios y responsive -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Incluimos Chart.js para los gráficos (principal y sparklines) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-    <!-- Carga de la librería SheetJS (XLSX) para la lectura de archivos Excel en el navegador -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    
-    <!-- Configuración de estilos personalizados -->
+    <title>SP6 Tecnologías Roadmap Estratégico 2026</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        /* Definiciones de color y fuente estilo corporativo */
         :root {
-            --color-primary: #1e3a8a; /* Azul oscuro corporativo */
-            --color-secondary: #f59e0b; /* Naranja para metas/alertas */
-            --color-success: #10b981; /* Verde */
-            --color-failure: #ef4444; /* Rojo */
-            --color-neutral: #9ca3af; /* Gris */
-            --bg-page: #f4f6f9;
+            --card-bg: rgba(26, 29, 35, 0.92);
+            --silver: #e2e8f0;
+            --blue-sp6: #0077b6;
+            --border: #2d3139;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
         }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-page);
+            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), 
+                        url('pared.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--silver);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            margin: 0; padding: 20px;
         }
 
-        /* Contenedor principal para centrar el dashboard */
-        .page-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1.5rem;
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
         }
 
-        /* Estilo para los títulos de categoría (columna B) */
-        .category-title {
-            border-bottom: 3px solid var(--color-primary);
-            padding-bottom: 0.5rem;
-            margin-top: 2.5rem;
-            margin-bottom: 1.5rem;
+        h1 { font-size: 2.2rem; text-transform: uppercase; letter-spacing: 4px; margin: 0; color: #ffffff; }
+        .subtitle { color: var(--blue-sp6); font-weight: bold; margin-top: 5px; letter-spacing: 2px; }
+
+        /* Barra de Progreso Global */
+        .global-progress-container {
+            max-width: 900px;
+            margin: 0 auto 40px auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
         }
 
-        /* Estilos de la grilla de KPI (móvil: 1 columna, tablet/desktop: 3 columnas mín.) */
-        .kpi-grid {
-            display: grid;
-            gap: 1rem;
-            /* Auto-fit asegura que haya al menos 280px de ancho por columna */
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        .progress-bar-bg {
+            background: #2d3139;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 10px;
         }
 
-        /* Estilo de la tarjeta KPI */
-        .kpi-card {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
-            cursor: pointer; 
-            transition: transform 0.1s, box-shadow 0.1s;
+        .progress-bar-fill {
+            background: linear-gradient(90deg, var(--blue-sp6), var(--success));
+            height: 100%; width: 0%;
+            transition: width 1s ease-in-out;
         }
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+
+        .roadmap-container { display: flex; gap: 25px; overflow-x: auto; padding-bottom: 30px; }
+
+        .phase-column {
+            min-width: 340px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            display: flex; flex-direction: column;
         }
+
+        .phase-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .phase-title { font-size: 1.1rem; font-weight: 800; color: var(--blue-sp6); text-transform: uppercase; }
+
+        /* Tarjetas de items detalladas */
+        .milestone-card {
+            background: #1a1d23;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 15px;
+            border-left: 5px solid #475569;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .milestone-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        .milestone-name { font-weight: bold; font-size: 1rem; margin-bottom: 10px; display: block; }
         
-        /* Estilo para el minigráfico */
-        .kpi-sparkline-container {
-            height: 60px; /* Altura fija para el canvas del sparkline */
-            margin-top: 0.75rem;
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 10px;
         }
+
+        .badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 0.7rem;
+            display: inline-block;
+        }
+
+        .status-hecho { border-left-color: var(--success) !important; color: var(--success); }
+        .status-en-progreso { border-left-color: var(--warning) !important; color: var(--warning); }
+        .status-pendiente { border-left-color: #64748b !important; color: #94a3b8; }
+
+        .resp-label { color: var(--silver); font-weight: 500; }
+
+        /* Estilo para el mini-porcentaje por item */
+        .item-progress-container { margin-top: 10px; }
+        .item-progress-bar { height: 4px; border-radius: 2px; background: #2d3139; overflow: hidden; margin-top: 4px; }
+        .item-progress-fill { height: 100%; background: var(--info); transition: width 0.5s; }
+
+        ::-webkit-scrollbar { height: 8px; }
+        ::-webkit-scrollbar-thumb { background: var(--blue-sp6); border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="page-container">
-        
-        <!-- ==================================================================== -->
-        <!-- ENCABEZADO Y ÁREA DE CARGA DE DATOS -->
-        <!-- ==================================================================== -->
-        <header class="mb-8 p-6 bg-white rounded-xl shadow-lg">
-            <!-- Título actualizado aquí -->
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800">SP6 Dashboard de Gestión Corporativa 2025</h1>
-            <p class="text-gray-500 mt-1 mb-4">Análisis Dinámico de KPIs mediante carga de Excel</p>
+    <header>
+        <h1>SP6 Tecnologías</h1>
+        <div class="subtitle">ROADMAP ESTRATÉGICO 2026</div>
+    </header>
 
-            <!-- Área de Carga de Archivos -->
-            <div class="flex flex-col sm:flex-row sm:items-end gap-4 mt-6">
-                <div class="flex-grow">
-                    <label for="excelFile" class="block text-sm font-medium text-gray-700 mb-1">Cargar Archivo de Datos (.xlsx):</label>
-                    <input type="file" id="excelFile" accept=".xlsx, .xls"
-                           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition duration-150">
-                </div>
-                <!-- Mensaje de estado para feedback al usuario -->
-                <p id="statusMessage" class="px-3 py-2 rounded-lg text-xs font-medium flex-shrink-0 bg-blue-100 text-blue-800">Cargando...</p>
-            </div>
-        </header>
+    <div class="global-progress-container">
+        <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
+            <span>Avance Corporativo Global</span>
+            <strong id="global-perc">0%</strong>
+        </div>
+        <div class="progress-bar-bg">
+            <div id="global-bar" class="progress-bar-fill"></div>
+        </div>
+    </div>
 
-        <!-- ==================================================================== -->
-        <!-- SELECTOR DE MÉTRICAS Y GRÁFICO PRINCIPAL -->
-        <!-- ==================================================================== -->
-        <section id="main-chart-section" class="bg-white p-6 rounded-xl shadow-lg mb-8 hidden">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Evolución Histórica Detallada</h2>
-            
-            <div class="mb-4">
-                 <label for="metricSelector" class="block text-sm font-medium text-gray-700 mb-1">Seleccionar Métrica:</label>
-                 <select id="metricSelector" class="mt-1 block w-full sm:w-1/2 p-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                     <option value="">Seleccione una métrica para ver el historial...</option>
-                 </select>
-            </div>
-
-            <!-- Gráfico Principal Chart.js -->
-            <div class="h-80 sm:h-96">
-                <canvas id="historyChart"></canvas>
-            </div>
-        </section>
-
-
-        <!-- ==================================================================== -->
-        <!-- SECCIÓN DE CARDS DE KPI AGRUPADAS POR CATEGORÍA -->
-        <!-- ==================================================================== -->
-        <section id="kpi-cards-section">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Resumen de Indicadores por Categoría</h2>
-            <div id="kpi-container" class="space-y-8">
-                <!-- Placeholder inicial -->
-                <p id="initialPrompt" class="text-center text-gray-500 p-8 bg-white rounded-xl shadow">
-                    Por favor, carga un archivo Excel para procesar y visualizar los indicadores.
-                </p>
-                <!-- Las categorías y KPIs se insertarán aquí dinámicamente -->
-            </div>
-        </section>
-
-    </div> <!-- Fin de page-container -->
+    <div class="roadmap-container" id="roadmap-root"></div>
 
     <script>
-        // ====================================================================
-        // 1. CONSTANTES Y CONFIGURACIÓN
-        // ====================================================================
-        const C_CATEGORY = 1;      // Columna B: Categoría del indicador
-        const C_NAME = 6;          // Columna G: Nombre del indicador
-        const C_META_PRINCIPAL = 7; // Columna H: Meta principal (para evaluación/card)
-        const C_HISTORY_START = 8; // Columna I: Inicio de los valores históricos
-        const C_HISTORY_END = 19;  // Columna T: Fin de los valores históricos
-        const C_REAL_VALUE = 20;   // Columna U: Valor actual / real consolidado
-        const C_TREND_META = 26;   // Columna AA: Meta para el trend (línea de referencia en gráficos)
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhlNfHYzNFcal4t70woFvZuBu0_B8vkRcV0YbEfgtfIW9U_H3yzZDwFve9OW3wQA/pub?output=csv';
 
-        // Fila que marca el fin de los datos de KPI (Fila 44 / index 43)
-        const R_KPI_DATA_END = 43; 
-        
-        // Nombre de la categoría a filtrar y eliminar (se compara en mayúsculas)
-        const FILTER_CATEGORY_NAME = 'SP6 DASHBOARD 2025';
-
-        // ====================================================================
-        // 2. ALMACENAMIENTO GLOBAL Y REFERENCIAS DOM
-        // ====================================================================
-        let globalKpis = [];          // Array con todos los objetos KPI
-        let historyLabels = [];       // Array con los nombres de los periodos (I1:T1 limpios)
-        let historyChartInstance = null; // Referencia al Chart.js principal
-
-        // Referencias a elementos del DOM.
-        const excelFileInput = document.getElementById('excelFile');
-        const statusMessage = document.getElementById('statusMessage');
-        const kpiContainer = document.getElementById('kpi-container');
-        const metricSelector = document.getElementById('metricSelector');
-        const mainChartSection = document.getElementById('main-chart-section');
-        const initialPrompt = document.getElementById('initialPrompt');
-
-        // ====================================================================
-        // 3. FUNCIONES DE UTILIDAD
-        // ====================================================================
-
-        /**
-         * Limpia y parsea un valor de celda.
-         * @param {*} cellValue - Valor crudo de la celda.
-         * @returns {number|string|null} - Número, cadena o null.
-         */
-        function cleanCell(cellValue) {
-            if (cellValue === null || cellValue === undefined || cellValue === '') {
-                return null;
-            }
-            if (typeof cellValue === 'string') {
-                const trimmed = cellValue.trim();
-                const lowerCaseTrimmed = trimmed.toLowerCase();
-                // Limpiar valores que representan "Sin Datos" o el texto "Ingresar"
-                if (lowerCaseTrimmed === 'n/a' || lowerCaseTrimmed === '-' || lowerCaseTrimmed === 'ingresar') {
-                    return null;
-                }
-                // Intentar parsear a número
-                const numberVal = parseFloat(trimmed.replace(/,/g, '')); // Reemplazar comas si se usa formato español
-                if (!isNaN(numberVal) && isFinite(numberVal)) {
-                    return numberVal;
-                }
-                return trimmed; // Devolver cadena limpia si no es numérico
-            }
-            return cellValue; // Devolver si ya es un número
+        // Lógica de cálculo: Hecho=100%, En Progreso=50%, Otros=0%
+        function getPuntos(estado) {
+            const e = estado ? estado.toLowerCase() : '';
+            if (e === 'hecho') return 1;
+            if (e === 'en progreso' || e === 'en curso') return 0.5;
+            return 0;
         }
 
-        /**
-         * Formatea un valor numérico para display.
-         * @param {number|null} value - El número a formatear.
-         * @returns {string} - El valor formateado o 'N/A'.
-         */
-        function formatValue(value) {
-            if (typeof value !== 'number' || isNaN(value)) {
-                return 'N/A';
-            }
-            return value.toLocaleString('es-ES', { maximumFractionDigits: 2 });
-        }
+        Papa.parse(SHEET_URL, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                const data = results.data.filter(item => item.Fase && item.Milestone);
+                const root = document.getElementById('roadmap-root');
+                root.innerHTML = '';
 
-        /**
-         * Formatea un porcentaje.
-         * @param {number|null} value - El porcentaje (0.0 a 100.0).
-         * @returns {string} - El valor formateado o 'N/A'.
-         */
-        function formatPercent(value) {
-            if (typeof value !== 'number' || isNaN(value)) {
-                return 'N/A';
-            }
-            const sign = value > 0 ? '+' : '';
-            // Formato con dos decimales para dos cifras significativas después del punto
-            return `${sign}${value.toFixed(2)}%`; 
-        }
+                // Calcular Global
+                const totalPuntos = data.reduce((acc, h) => acc + getPuntos(h.Estado), 0);
+                const percGlobal = Math.round((totalPuntos / data.length) * 100);
+                document.getElementById('global-bar').style.width = percGlobal + '%';
+                document.getElementById('global-perc').innerText = percGlobal + '%';
 
-        // ====================================================================
-        // 4. LÓGICA DE PROCESAMIENTO DE KPIs
-        // ====================================================================
+                const fasesMap = {};
+                data.forEach(item => {
+                    if(!fasesMap[item.Fase]) fasesMap[item.Fase] = [];
+                    fasesMap[item.Fase].push(item);
+                });
 
-        /**
-         * Construye un objeto KPI a partir de una fila del Excel.
-         * @param {Array<*>} row - Datos de la fila.
-         * @param {number} index - Índice de la fila (para identificación).
-         * @returns {Object|null} - Objeto KPI o null si es inválido.
-         */
-        function buildKpiObject(row, index) {
-            
-            let category = String(cleanCell(row[C_CATEGORY]) || '').trim();
-            
-            // FILTRADO SOLICITADO: Omitir si la categoría está vacía, es 'N/A', o coincide con el nombre a eliminar.
-            if (category.length === 0 || category.toLowerCase() === 'n/a' || category.toUpperCase() === FILTER_CATEGORY_NAME) {
-                return null;
-            }
+                Object.keys(fasesMap).forEach(nombreFase => {
+                    const hilitos = fasesMap[nombreFase];
+                    const puntosFase = hilitos.reduce((acc, h) => acc + getPuntos(h.Estado), 0);
+                    const percFase = Math.round((puntosFase / hilitos.length) * 100);
 
-            const name = String(cleanCell(row[C_NAME]) || `KPI - ${index}`).trim();
-
-            // Si el nombre del KPI es vacío o un valor inválido, omitir la fila
-            if (name === 'null' || name === 'N/A' || name === 'Ingresar' || name.length === 0) return null;
-
-            // --- Extracción de Valores Crudos y Limpios ---
-            const metaRaw = row[C_META_PRINCIPAL];
-            const metaValue = cleanCell(metaRaw);
-            const trendMetaRaw = row[C_TREND_META];
-            const trendMetaValue = cleanCell(trendMetaRaw);
-            const realValueRaw = row[C_REAL_VALUE];
-            const realValue = cleanCell(realValueRaw);
-
-            // --- Historia ---
-            const history = [];
-            for (let i = C_HISTORY_START; i <= C_HISTORY_END; i++) {
-                // Limpiamos cada valor histórico. Chart.js maneja 'null' como datos faltantes.
-                history.push(cleanCell(row[i]));
-            }
-
-            // --- Cálculos de Cumplimiento y Diferencia ---
-            let met = null;
-            let diffAbs = null;
-            let diffPct = null;
-            let feedback = 'Sin datos suficientes';
-            let feedbackColor = 'bg-gray-100 text-gray-700';
-            let emoji = 'ℹ️';
-            let metaIcon = '';
-
-            // Detección de lógica "Menor es Mejor"
-            const isLowerBetter = name.toLowerCase().includes('tiempo de cotización');
-
-            if (typeof realValue === 'number' && typeof metaValue === 'number' && metaValue !== 0) {
-                diffAbs = realValue - metaValue;
-                diffPct = (diffAbs / metaValue) * 100;
-
-                let metCondition;
-                if (isLowerBetter) {
-                    // Lógica "Menor es Mejor": Cumple si Real <= Meta
-                    metCondition = realValue <= metaValue;
-                } else {
-                    // Lógica estándar "Mayor es Mejor": Cumple si Real >= Meta
-                    metCondition = realValue >= metaValue;
-                }
-
-                if (metCondition) {
-                    met = true;
-                    feedback = 'Meta cumplida';
-                    feedbackColor = 'bg-green-100 text-green-700';
-                    emoji = '✅';
-                    // Para "Menor es Mejor", Real < Meta es bueno (flecha abajo).
-                    metaIcon = isLowerBetter ? '⬇️' : '⬆️'; 
-                } else {
-                    met = false;
-                    feedback = 'Meta no cumplida';
-                    feedbackColor = 'bg-red-100 text-red-700';
-                    emoji = '❌';
-                    // Para "Menor es Mejor", Real > Meta es malo (flecha arriba).
-                    metaIcon = isLowerBetter ? '⬆️' : '⬇️';
-                }
-                
-            } else if (typeof realValue === 'number' && typeof metaValue !== 'number' && metaValue !== null) {
-                // Caso especial: Hay Real Value, pero Meta es un texto (Ej. 'En Progreso')
-                feedback = `Meta: ${String(metaValue)}`;
-                feedbackColor = 'bg-yellow-100 text-yellow-700';
-                emoji = '⚠️';
-            }
-
-
-            return {
-                index,
-                category,
-                name,
-                metaRaw,
-                metaValue,
-                metaDisplay: String(metaRaw || 'N/A').trim(),
-                trendMetaRaw,
-                trendMetaValue: typeof trendMetaValue === 'number' ? trendMetaValue : null,
-                history,
-                realValueRaw,
-                realValue: typeof realValue === 'number' ? realValue : null,
-                diffAbs,
-                diffPct,
-                diffPctText: formatPercent(diffPct),
-                met,
-                feedback,
-                feedbackColor,
-                emoji,
-                metaIcon // Ícono calculado para la tarjeta
-            };
-        }
-
-        /**
-         * Lee el archivo Excel, extrae datos, construye KPIs.
-         */
-        function processExcelFile(event) {
-            const file = event.target.files[0];
-            if (!file) {
-                renderDashboard(); 
-                return;
-            }
-
-            showStatus(`Procesando archivo: ${file.name}...`, 'info');
-
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    // Suponemos que la primera hoja es la que contiene los datos.
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-
-                    // Convertir a array de arrays (header: 1)
-                    const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-                    if (sheetData.length < 2) {
-                        showStatus('El archivo Excel está vacío o no contiene suficientes datos.', 'error');
-                        renderDashboard();
-                        return;
-                    }
+                    const column = document.createElement('div');
+                    column.className = 'phase-column';
                     
-                    // Resetear datos globales
-                    globalKpis = [];
-                    historyLabels = [];
+                    let html = `
+                        <div class="phase-header">
+                            <div class="phase-title">${nombreFase}</div>
+                            <div style="font-size:0.8rem; margin-top:5px; color:var(--info)">${percFase}% completado</div>
+                        </div>
+                    `;
+                    
+                    hilitos.forEach(hito => {
+                        const estadoOriginal = hito.Estado || 'Pendiente';
+                        const estadoClase = estadoOriginal.toLowerCase().replace(/\s+/g, '-');
+                        const puntosItem = getPuntos(estadoOriginal) * 100;
+                        const responsable = hito.Responsable || 'Sin asignar';
+                        const fecha = hito.FechaObjetivo || 'TBD';
 
-                    // 1. Extracción de historyLabels (Fila 1 / Index 0, Columnas I1:T1)
-                    const headerRow = sheetData[0] || [];
-                    for (let i = C_HISTORY_START; i <= C_HISTORY_END; i++) {
-                        const label = String(headerRow[i] || '').trim();
-                        // Solo incluimos labels que tienen texto para los períodos
-                        if (label.length > 0) {
-                            historyLabels.push(label);
-                        }
-                    }
+                        html += `
+                            <div class="milestone-card status-${estadoClase}">
+                                <span class="milestone-name">${hito.Milestone}</span>
+                                
+                                <div class="meta-grid">
+                                    <div>📅 ${fecha}</div>
+                                    <div style="text-align:right">👤 <span class="resp-label">${responsable}</span></div>
+                                    <div>Status: <span class="badge">${estadoOriginal}</span></div>
+                                    <div style="text-align:right">Avance: ${puntosItem}%</div>
+                                </div>
 
-                    // 2. Procesamiento de KPIs (Filas de datos, asumiendo que empiezan en la Fila 2/index 1)
-                    // Usamos R_KPI_DATA_END (Fila 44 / index 43) como límite para no procesar las filas de resumen.
-                    const kpiDataRows = sheetData.slice(1, R_KPI_DATA_END); 
-                    kpiDataRows.forEach((row, index) => {
-                        const kpi = buildKpiObject(row, index);
-                        if (kpi) {
-                            globalKpis.push(kpi);
-                        }
+                                <div class="item-progress-container">
+                                    <div class="item-progress-bar">
+                                        <div class="item-progress-fill" style="width: ${puntosItem}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     });
-
-                    // 3. Renderizar el Dashboard
-                    renderDashboard();
-                    
-                    showStatus(`¡Archivo "${file.name}" procesado exitosamente!`, 'success');
-
-                } catch (error) {
-                    const errorMessage = `Error al procesar el archivo. Asegúrese del formato de columnas: ${error.message}`;
-                    console.error('[CONSOLE_ERROR]', errorMessage, error);
-                    showStatus('Hubo un error al leer o procesar el archivo.', 'error');
-                    renderDashboard(); // Limpiar UI
-                }
-            };
-
-            reader.readAsArrayBuffer(file);
-        }
-
-        // ====================================================================
-        // 5. FUNCIONES DE RENDERIZADO DEL DASHBOARD
-        // ====================================================================
-
-        /**
-         * Renderiza el dashboard principal (cards, select, gráficos iniciales).
-         */
-        function renderDashboard() {
-            
-            // VERIFICACIÓN CRÍTICA DEL DOM: Se asegura que los elementos existan antes de usar classList
-            if (!initialPrompt || !mainChartSection || !kpiContainer || !metricSelector) {
-                 console.error("Error de DOM: Algunos elementos contenedores principales no se encontraron. Verifique los IDs del HTML.");
-                 return; 
-            }
-
-            kpiContainer.innerHTML = '';
-            metricSelector.innerHTML = '<option value="">Seleccione una métrica para ver el historial...</option>';
-            mainChartSection.classList.add('hidden');
-            
-            // 1. Si no hay KPIs, mostrar mensaje inicial
-            if (globalKpis.length === 0) {
-                initialPrompt.classList.remove('hidden');
-                return;
-            }
-            initialPrompt.classList.add('hidden');
-            
-            // 2. Agrupar KPIs por categoría
-            const kpisByCategory = globalKpis.reduce((acc, kpi) => {
-                if (!acc[kpi.category]) {
-                    acc[kpi.category] = [];
-                }
-                acc[kpi.category].push(kpi);
-                return acc;
-            }, {});
-
-            // 3. Renderizar Tarjetas de KPI y Selector
-            Object.keys(kpisByCategory).forEach(categoryName => {
-                // Crear título de categoría
-                const categoryDiv = document.createElement('div');
-                categoryDiv.innerHTML = `<h3 class="category-title text-xl font-bold text-gray-700">${categoryName.toUpperCase()}</h3>`;
-                
-                // Crear contenedor de la grilla
-                const kpiGrid = document.createElement('div');
-                kpiGrid.className = 'kpi-grid';
-                
-                kpisByCategory[categoryName].forEach(kpi => {
-                    // Crear tarjeta y agregarla a la grilla
-                    const card = createKpiCardHtml(kpi);
-                    kpiGrid.appendChild(card);
-
-                    // Llenar el selector de métricas
-                    const option = document.createElement('option');
-                    option.value = kpi.index;
-                    option.textContent = `${kpi.category} - ${kpi.name}`;
-                    metricSelector.appendChild(option);
-
-                    // Inicializar el Sparkline
-                    // Usamos requestAnimationFrame para asegurar que el canvas se ha renderizado
-                    requestAnimationFrame(() => drawSparkline(`sparkline-${kpi.index}`, kpi));
-                });
-                
-                kpiContainer.appendChild(categoryDiv);
-                kpiContainer.appendChild(kpiGrid);
-            });
-
-            // 4. Inicializar el Gráfico Principal con la primera métrica
-            if (globalKpis.length > 0) {
-                const firstKpi = globalKpis[0];
-                metricSelector.value = firstKpi.index;
-                updateMainChart(firstKpi.index);
-                mainChartSection.classList.remove('hidden');
-            }
-        }
-
-        /**
-         * Crea la estructura HTML para una tarjeta KPI.
-         */
-        function createKpiCardHtml(kpi) {
-            const card = document.createElement('div');
-            card.className = `kpi-card bg-white p-5 rounded-xl border border-gray-200`;
-            card.setAttribute('data-kpi-index', kpi.index);
-            // Evento para actualizar el gráfico principal al hacer click
-            card.onclick = () => {
-                metricSelector.value = kpi.index;
-                updateMainChart(kpi.index);
-                // Scroll suave al gráfico principal
-                mainChartSection.scrollIntoView({ behavior: 'smooth' });
-            };
-
-            const realValueDisplay = formatValue(kpi.realValue);
-            const diffDisplay = typeof kpi.diffAbs === 'number' 
-                ? `${formatValue(kpi.diffAbs)} (${kpi.diffPctText})` 
-                : 'N/A';
-            
-            const diffColorClass = kpi.met === true ? 'text-green-600' : (kpi.met === false ? 'text-red-600' : 'text-gray-500');
-            const metaIcon = kpi.metaIcon; // Usamos el ícono calculado en buildKpiObject
-
-
-            card.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div class="kpi-title">
-                        <h4 class="text-xl font-bold text-gray-900">${kpi.name}</h4>
-                        <p class="text-xs text-gray-500 mb-2">${kpi.category}</p>
-                    </div>
-                    <!-- Badge de estado de cumplimiento -->
-                    <span class="px-2 py-0.5 text-xs font-medium rounded-full ${kpi.feedbackColor}">
-                        ${kpi.emoji} ${kpi.feedback}
-                    </span>
-                </div>
-                
-                <!-- Valores clave -->
-                <div class="my-3 kpi-values">
-                    <p class="text-4xl font-extrabold text-indigo-700">${realValueDisplay}</p>
-                    <p class="text-sm text-gray-600 mt-1">
-                        Meta Principal (H): <span class="font-medium text-gray-700">${String(kpi.metaDisplay).substring(0, 30)}</span>
-                    </p>
-                </div>
-                
-                <!-- Diferencia y retroalimentación -->
-                <div class="flex justify-between items-end mt-4 kpi-diff">
-                    <p class="${diffColorClass} text-sm font-semibold">
-                        ${metaIcon} Dif vs Meta: ${diffDisplay}
-                    </p>
-                </div>
-
-                <!-- Contenedor del Minigráfico (Sparkline) -->
-                <div class="kpi-sparkline-container border-t pt-3">
-                    <canvas id="sparkline-${kpi.index}" class="kpi-sparkline"></canvas>
-                </div>
-            `;
-            return card;
-        }
-
-        /**
-         * Dibuja un minigráfico (Sparkline) con datos reales y meta de trend (AA).
-         */
-        function drawSparkline(canvasId, kpi) {
-            const ctx = document.getElementById(canvasId);
-            if (!ctx) return;
-            
-            const history = kpi.history;
-            const labels = historyLabels;
-            
-            // Filtramos los datos históricos para solo mostrar donde hay valores.
-            const realDataPoints = history.map(v => typeof v === 'number' ? v : null);
-            
-            // Dataset de Meta de Trend (AA)
-            let trendMetaDataset = null;
-            if (typeof kpi.trendMetaValue === 'number') {
-                const metaTrendData = Array(labels.length).fill(kpi.trendMetaValue);
-                trendMetaDataset = {
-                    label: 'Meta (Trend)',
-                    data: metaTrendData,
-                    borderColor: 'var(--color-secondary)',
-                    backgroundColor: 'transparent',
-                    borderWidth: 1,
-                    borderDash: [2, 2], // Línea punteada
-                    pointRadius: 0,
-                    tension: 0,
-                };
-            }
-
-            const datasets = [
-                {
-                    label: 'Real',
-                    data: realDataPoints,
-                    borderColor: 'var(--color-primary)',
-                    backgroundColor: 'rgba(30, 58, 138, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    fill: 'start',
-                    tension: 0.2,
-                }
-            ];
-
-            if (trendMetaDataset) {
-                datasets.push(trendMetaDataset);
-            }
-
-            // Destruir instancia anterior si existe (aunque los IDs son únicos por índice)
-            if (window.sparklineInstances && window.sparklineInstances[canvasId]) {
-                window.sparklineInstances[canvasId].destroy();
-            }
-
-            const chart = new Chart(ctx, {
-                type: 'line',
-                data: { labels, datasets },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    scales: { 
-                        x: { display: false }, 
-                        y: { display: false, beginAtZero: false } 
-                    },
-                    layout: { padding: 0 }
-                }
-            });
-            // Guardar referencia
-            window.sparklineInstances = window.sparklineInstances || {};
-            window.sparklineInstances[canvasId] = chart;
-        }
-
-        /**
-         * Dibuja o actualiza el gráfico histórico principal.
-         */
-        function updateMainChart(kpiIndex) {
-            const kpi = globalKpis.find(k => k.index == kpiIndex); // Comparación flexible
-            if (!kpi) return;
-
-            const ctx = document.getElementById('historyChart').getContext('2d');
-            const dataReal = kpi.history.map(v => typeof v === 'number' ? v : null);
-            const labels = historyLabels;
-            
-            // --- Configuración del Dataset Meta Trend (AA) ---
-            let metaTrendData = [];
-            let datasets = [];
-            
-            // Dataset 1: Valor Real
-            datasets.push({
-                label: `Valor Real: ${kpi.name}`,
-                borderColor: 'var(--color-primary)',
-                backgroundColor: 'rgba(30, 58, 138, 0.15)',
-                fill: 'origin',
-                tension: 0.3,
-                borderWidth: 3,
-                pointRadius: 4,
-                data: dataReal,
-            });
-
-            // Dataset 2: Meta de Trend (AA)
-            if (typeof kpi.trendMetaValue === 'number') {
-                metaTrendData = Array(labels.length).fill(kpi.trendMetaValue);
-                datasets.push({
-                    label: `Meta Trend (AA): ${formatValue(kpi.trendMetaValue)}`,
-                    borderColor: 'var(--color-secondary)',
-                    backgroundColor: 'transparent',
-                    fill: false,
-                    tension: 0,
-                    borderWidth: 2,
-                    borderDash: [8, 4], // Línea punteada
-                    pointRadius: 0,
-                    data: metaTrendData,
+                    column.innerHTML = html;
+                    root.appendChild(column);
                 });
             }
-
-            // Destruir la instancia anterior
-            if (historyChartInstance) {
-                historyChartInstance.destroy();
-            }
-
-            historyChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: { labels, datasets },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: { mode: 'index', intersect: false, 
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed.y !== null) {
-                                        // Intenta formatear como valor local, si es apropiado
-                                        label += context.parsed.y.toLocaleString('es-ES', { maximumFractionDigits: 2 });
-                                    }
-                                    return label;
-                                }
-                            }
-                        },
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Periodo' } },
-                        y: { 
-                            title: { display: true, text: 'Valor' }, 
-                            beginAtZero: false,
-                            ticks: {
-                                callback: function(value) { 
-                                    return value.toLocaleString('es-ES', { notation: 'compact' });
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-
-        // ====================================================================
-        // 6. INICIALIZACIÓN DE EVENTOS
-        // ====================================================================
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Evento de cambio para cargar el archivo Excel
-            excelFileInput?.addEventListener('change', processExcelFile);
-            
-            // Evento de cambio para actualizar el gráfico principal
-            metricSelector?.addEventListener('change', (e) => {
-                updateMainChart(e.target.value);
-            });
-
-            // Mensaje inicial al cargar la página
-            showStatus('Esperando la carga de tu archivo Excel...', 'info');
-            renderDashboard(); // Renderiza la UI vacía inicialmente
         });
-
-        // Función para mostrar un mensaje de estado
-        function showStatus(message, type = 'info') {
-            if (!statusMessage) return; // Verificación adicional
-            statusMessage.textContent = message;
-            statusMessage.className = 'px-3 py-2 rounded-lg text-xs font-medium flex-shrink-0';
-            
-            // Definir clases de color para feedback
-            if (type === 'success') {
-                statusMessage.classList.add('bg-green-100', 'text-green-800');
-            } else if (type === 'error') {
-                statusMessage.classList.add('bg-red-100', 'text-red-800');
-            } else { // info
-                statusMessage.classList.add('bg-blue-100', 'text-blue-800');
-            }
-        }
-        
     </script>
 </body>
 </html>
